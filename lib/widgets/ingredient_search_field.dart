@@ -57,17 +57,22 @@ class _IngredientSearchFieldState
     });
   }
 
-  void _search(String query) {
-    final asyncValue = ref.read(searchIngredientsProvider(query));
-    final results = asyncValue.maybeWhen(
-      data: (ingredients) => ingredients,
-      orElse: () => <Ingredient>[],
-    );
-    if (mounted) {
-      setState(() {
-        _query = query;
-        _results = results;
-      });
+  Future<void> _search(String query) async {
+    try {
+      final results = await ref.read(searchIngredientsProvider(query).future);
+      if (mounted) {
+        setState(() {
+          _query = query;
+          _results = results;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _query = query;
+          _results = [];
+        });
+      }
     }
   }
 
