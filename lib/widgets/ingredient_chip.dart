@@ -12,17 +12,25 @@ class IngredientChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      label: Text(label),
-      deleteIcon: onDeleted != null ? const Icon(Icons.close, size: 20) : null,
-      onDeleted: onDeleted,
-      backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-      labelStyle: TextStyle(
-        fontSize: 15,
-        color: Theme.of(context).colorScheme.onSecondaryContainer,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 160),
+      child: Chip(
+        label: Text(
+          label,
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
+        deleteIcon:
+            onDeleted != null ? const Icon(Icons.close, size: 20) : null,
+        onDeleted: onDeleted,
+        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+        labelStyle: TextStyle(
+          fontSize: 15,
+          color: Theme.of(context).colorScheme.onSecondaryContainer,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        materialTapTargetSize: MaterialTapTargetSize.padded,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      materialTapTargetSize: MaterialTapTargetSize.padded,
     );
   }
 }

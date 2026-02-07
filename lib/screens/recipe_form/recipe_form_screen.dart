@@ -176,14 +176,9 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
     }
 
     if (mounted) {
-      // 레시피 리스트(HomeScreen)로 이동
-      // 새 레시피 추가: HomeScreen -> FormScreen (1번 pop)
-      // 레시피 수정: HomeScreen -> DetailScreen -> FormScreen (2번 pop)
       if (widget.recipe == null) {
-        // 새 레시피 추가
         Navigator.of(context).pop();
       } else {
-        // 레시피 수정 - DetailScreen과 FormScreen 모두 닫기
         Navigator.of(context).pop(); // FormScreen 닫기
         Navigator.of(context).pop(); // DetailScreen 닫기
       }
@@ -234,6 +229,13 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
     });
   }
 
+  void _moveStep(int oldIndex, int newIndex) {
+    setState(() {
+      final step = _steps.removeAt(oldIndex);
+      _steps.insert(newIndex, step);
+    });
+  }
+
   void _addTag() {
     final tag = _tagController.text.trim();
     if (tag.isNotEmpty && !_tags.contains(tag)) {
@@ -246,15 +248,29 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.recipe == null ? '레시피 추가' : '레시피 수정'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _saveRecipe,
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPadding,
+            vertical: AppSpacing.sm,
           ),
-        ],
+          child: FilledButton(
+            onPressed: _saveRecipe,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(double.infinity, 52),
+            ),
+            child: Text(
+              widget.recipe == null ? '레시피 저장' : '수정 완료',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -262,6 +278,13 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
           padding: const EdgeInsets.all(AppSpacing.screenPadding),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           children: [
+            // ── 기본 정보 섹션 ──
+            _SectionHeader(
+              icon: Icons.info_outline,
+              title: '기본 정보',
+              color: colorScheme.primary,
+            ),
+            const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
@@ -275,7 +298,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                 return null;
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -284,11 +307,18 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
               ),
               maxLines: 3,
             ),
-            const SizedBox(height: 20),
+
+            // ── 조리 설정 섹션 ──
+            const SizedBox(height: AppSpacing.lg),
+            _SectionHeader(
+              icon: Icons.settings,
+              title: '조리 설정',
+              color: colorScheme.primary,
+            ),
+            const SizedBox(height: AppSpacing.md),
             LayoutBuilder(
               builder: (context, constraints) {
                 if (constraints.maxWidth >= 400) {
-                  // 넓은 화면: Row
                   return Row(
                     children: [
                       Expanded(
@@ -302,7 +332,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                           keyboardType: TextInputType.number,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: TextFormField(
                           controller: _cookingTimeController,
@@ -317,7 +347,6 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                     ],
                   );
                 } else {
-                  // 좁은 화면: Column
                   return Column(
                     children: [
                       TextFormField(
@@ -329,7 +358,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                         ),
                         keyboardType: TextInputType.number,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.md),
                       TextFormField(
                         controller: _cookingTimeController,
                         decoration: const InputDecoration(
@@ -344,7 +373,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                 }
               },
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<DifficultyLevel>(
               value: _difficulty,
               decoration: const InputDecoration(
@@ -365,12 +394,15 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                 }
               },
             ),
-            const SizedBox(height: 24),
-            Text(
-              '카테고리',
-              style: Theme.of(context).textTheme.titleLarge,
+
+            // ── 분류 섹션 ──
+            const SizedBox(height: AppSpacing.lg),
+            _SectionHeader(
+              icon: Icons.label_outline,
+              title: '분류',
+              color: colorScheme.primary,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -391,12 +423,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 24),
-            Text(
-              '태그',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _tagController,
               decoration: InputDecoration(
@@ -423,102 +450,193 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                 }).toList(),
               ),
             ],
-            const SizedBox(height: 24),
-            Text(
-              '재료',
-              style: Theme.of(context).textTheme.titleLarge,
+
+            // ── 재료 섹션 ──
+            const SizedBox(height: AppSpacing.lg),
+            _SectionHeader(
+              icon: Icons.shopping_basket,
+              title: '재료',
+              color: colorScheme.primary,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.md),
             IngredientSearchField(
               onIngredientSelected: (normalizedName, displayName) {
                 _addIngredient(normalizedName, displayName);
               },
             ),
             if (_ingredientIds.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              ...List.generate(_ingredientIds.length, (index) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      IngredientChip(
-                        label: _ingredientDisplayNames[index],
-                        onDeleted: () => _removeIngredient(index),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: IngredientAmountField(
-                          initialValue: index < _ingredientAmounts.length
-                              ? _ingredientAmounts[index]
-                              : '',
-                          onChanged: (value) =>
-                              _updateIngredientAmount(index, value),
-                        ),
-                      ),
-                    ],
+              const SizedBox(height: AppSpacing.md),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: Column(
+                    children: List.generate(_ingredientIds.length, (index) {
+                      return Column(
+                        children: [
+                          if (index > 0)
+                            const Divider(height: 1, indent: 16, endIndent: 16),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
+                            child: Row(
+                              children: [
+                                IngredientChip(
+                                  label: _ingredientDisplayNames[index],
+                                  onDeleted: () => _removeIngredient(index),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: IngredientAmountField(
+                                    initialValue:
+                                        index < _ingredientAmounts.length
+                                            ? _ingredientAmounts[index]
+                                            : '',
+                                    onChanged: (value) =>
+                                        _updateIngredientAmount(index, value),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
                   ),
-                );
-              }),
+                ),
+              ),
             ],
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '조리 단계',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _addStep,
-                ),
-              ],
+
+            // ── 조리 단계 섹션 ──
+            const SizedBox(height: AppSpacing.lg),
+            _SectionHeader(
+              icon: Icons.format_list_numbered,
+              title: '조리 단계',
+              color: colorScheme.primary,
+              trailing: IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: _addStep,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.md),
             if (_steps.isEmpty)
               const Center(
-                child: Text('+ 버튼을 눌러 조리 단계를 추가하세요'),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: Text('+ 버튼을 눌러 조리 단계를 추가하세요'),
+                ),
               )
             else
               ...List.generate(_steps.length, (index) {
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        child: Text(
-                          '${index + 1}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: _steps[index],
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            hintText: '조리 단계를 입력하세요',
+                      // 상단: 번호 + 이동/삭제 버튼
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            child: Text(
+                              '${index + 1}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
                           ),
-                          maxLines: 3,
-                          onChanged: (value) => _updateStep(index, value),
-                        ),
+                          const Spacer(),
+                          if (index > 0)
+                            IconButton(
+                              icon: const Icon(Icons.arrow_upward, size: 20),
+                              onPressed: () => _moveStep(index, index - 1),
+                              visualDensity: VisualDensity.compact,
+                              tooltip: '위로 이동',
+                            ),
+                          if (index < _steps.length - 1)
+                            IconButton(
+                              icon: const Icon(Icons.arrow_downward, size: 20),
+                              onPressed: () => _moveStep(index, index + 1),
+                              visualDensity: VisualDensity.compact,
+                              tooltip: '아래로 이동',
+                            ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            onPressed: () => _removeStep(index),
+                            visualDensity: VisualDensity.compact,
+                            tooltip: '삭제',
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _removeStep(index),
+                      const SizedBox(height: AppSpacing.xs),
+                      // 하단: 텍스트 필드 (전체 너비)
+                      TextFormField(
+                        initialValue: _steps[index],
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: '조리 단계를 입력하세요',
+                        ),
+                        maxLines: null,
+                        minLines: 2,
+                        onChanged: (value) => _updateStep(index, value),
                       ),
                     ],
                   ),
                 );
               }),
+
+            // 키보드 반응형 하단 패딩
+            SizedBox(
+              height: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xxl,
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Color color;
+  final Widget? trailing;
+
+  const _SectionHeader({
+    required this.icon,
+    required this.title,
+    required this.color,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+            ),
+            if (trailing != null) ...[
+              const Spacer(),
+              trailing!,
+            ],
+          ],
+        ),
+        const Divider(height: AppSpacing.sm),
+      ],
     );
   }
 }

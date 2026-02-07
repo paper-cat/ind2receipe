@@ -28,14 +28,13 @@ class _IngredientAmountFieldState extends State<IngredientAmountField> {
 
   void _onFocusChange() {
     if (_focusNode.hasFocus) {
-      // 키보드 올라올 때 자동 스크롤
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           Scrollable.ensureVisible(
             context,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            alignment: 0.5, // 화면 중앙에 위치
+            alignment: 0.5,
           );
         }
       });
@@ -56,9 +55,10 @@ class _IngredientAmountFieldState extends State<IngredientAmountField> {
       controller: _controller,
       focusNode: _focusNode,
       decoration: const InputDecoration(
-        labelText: '양 (예: 200g, 2개)',
+        hintText: '200g',
         border: OutlineInputBorder(),
         isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
       onChanged: widget.onChanged,
     );
