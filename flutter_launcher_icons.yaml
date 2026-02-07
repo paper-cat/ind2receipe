@@ -1,0 +1,17 @@
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+
+  # Android
+  android: true
+  adaptive_icon_background: "#FFC107"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+
+  # iOS
+  ios: true
+  remove_alpha_ios: true
+
+  # Windows
+  windows:
+    generate: true
+    image_path: "assets/icon/app_icon.png"
+    icon_size: 48
